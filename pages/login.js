@@ -1,55 +1,57 @@
-import { useState, useRef } from 'react';
-import Head from 'next/head';
-import { signup, login, logout, useAuth } from '../config/firebase';
+import React, { useState, useEffect } from 'react';
+// import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import { auth, uiConfig } from '../config/firebase';
+import { signInWithEmailAndPassword, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
 
 
 export default function Login() {
-    const [loading, setLoading] = useState(false);
-    const currentUser = useAuth();
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-    const emailRef = useRef();
-    const passwordRef = useRef();
-
-    async function handleSignup() {
-        setLoading(true);
-        await signup(emailRef.current.value, passwordRef.current.value);
-        setLoading(false);
-    }
-
-    async function handleLogin() {
-        setLoading(true);
+    const loginSubmit = async (e) => {
         try {
-            await login(emailRef.current.value, passwordRef.current.value);
+            const result = await signInWithEmailAndPassword(auth, email, password)
+            console.log(result);
         } catch {
-            alert("Error!");
+            alert('Login failed');
         }
-        setLoading(false);
     }
 
-    async function handleLogout() {
-        setLoading(true);
+    const loginPhoneSubmit = async (e) => {
         try {
-            await logout();
-        } catch {
-            alert("Error!");
+            const appVerifier = window.recaptchaVerifier;
+            const result = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+            console.log(result);
+        } catch (error) {
+            console.log(error);
+            alert('Login failed');
         }
-        setLoading(false);
     }
+
+    useEffect(() => {
+        const recaptchaVerifier = new RecaptchaVerifier('sign-in-button', {
+            'size': 'invisible',
+            'callback': (response) => {
+                onSignInSubmit();
+            }
+        }, auth);
+        window.recaptchaVerifier = recaptchaVerifier;
+    }, [])
 
     return (
         <div id="main">
+            <h1>SORTA O SORDADINHO AI</h1>
+            {/* <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={auth} /> */}
 
-            <div>Currently logged in as: {currentUser?.email} </div>
 
-            <div id="fields">
-                <input ref={emailRef} placeholder="Email" />
-                <input ref={passwordRef} type="password" placeholder="Password" />
-            </div>
+            <input type="text" placeholder="E-mail" onChange={e => setEmail(e.target.value)} />
+            <input type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
+            <button onClick={() => loginSubmit()}>Login</button>
 
-            <button disabled={loading || currentUser} onClick={handleSignup}>Sign Up</button>
-            <button disabled={loading || currentUser} onClick={handleLogin}>Log In</button>
-            <button disabled={loading || !currentUser} onClick={handleLogout}>Log Out</button>
-
+            <p>Ou entre com telefone</p>
+            <input type="text" placeholder="Telefone" onChange={e => setPhoneNumber(e.target.value)} />
+            <button id="sign-in-button" onClick={() => loginPhoneSubmit(auth, phoneNumber)}>Login</button>
         </div>
     );
 }

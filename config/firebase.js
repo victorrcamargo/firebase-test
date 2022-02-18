@@ -1,38 +1,28 @@
-import { useEffect, useState } from "react";
-import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyCKFo1ctO8PJht_njIl5wXQg9I8I4wMLDE",
-    authDomain: "guardlife-login.firebaseapp.com",
+    authDomain: "localhost",
     projectId: "guardlife-login",
     storageBucket: "guardlife-login.appspot.com",
     messagingSenderId: "378120028132",
     appId: "1:378120028132:web:822a9c4732835aa06c51f1"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-export function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
-}
+//config ui
+const uiConfig = {
 
-export function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
-}
+    signInFlow: 'popup',
 
-export function logout() {
-    return signOut(auth);
-}
+    signInSuccessUrl: '/signedIn',
 
-export function useAuth() {
-    const [currentUser, setCurrentUser] = useState();
+    signInOptions: [
+        firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+    ],
+};
 
-    useEffect(() => {
-        const unsub = onAuthStateChanged(auth, user => setCurrentUser(user));
-        return unsub;
-    }, [])
-
-    return currentUser;
-}
+export { auth, uiConfig };
